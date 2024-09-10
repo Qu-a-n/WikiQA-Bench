@@ -39,30 +39,6 @@ async def main(start, end):
             idx.append(stuff["id"])
     print(idx)
 
-    # responses = []
-    # length = (int(len(qs)/5)+1 if len(qs)%5!=0 else int(len(qs)/5))
-    # for i in range(length):
-    #     if(5*i+5>len(qs)):
-    #         callings = [
-    #             stage(
-    #                 question=qs[id], 
-    #                 table=pd.read_csv(ts_path[id]).to_string(index=False),
-    #                 id=idx[id]
-    #             ) 
-    #         for id in range(5*i, len(qs))
-    #         ]
-    #     else:
-    #         callings = [
-    #             stage(
-    #                 question=qs[id], 
-    #                 table=pd.read_csv(ts_path[id]).to_string(index=False),
-    #                 id=idx[id]
-    #             ) 
-    #         for id in range(5*i, 5*i+5)
-    #         ]
-    #     response = await asyncio.gather(*callings)
-    #     responses += response
-
     callings = [stage(
                     question=qs[id], 
                     table= pd.read_csv(ts_path[id], on_bad_lines='skip').to_string(index=False),
