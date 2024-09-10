@@ -55,30 +55,30 @@ from abc import ABCMeta, abstractmethod
 ################ String Normalization ################
 
 def normalize(x):
-    if not isinstance(x, unicode):
+    if not isinstance(x, str):
         x = x.decode('utf8', errors='ignore')
     # Remove diacritics
     x = ''.join(c for c in unicodedata.normalize('NFKD', x)
                 if unicodedata.category(c) != 'Mn')
     # Normalize quotes and dashes
-    x = re.sub(ur"[‘’´`]", "'", x)
-    x = re.sub(ur"[“”]", "\"", x)
-    x = re.sub(ur"[‐‑‒–—−]", "-", x)
+    x = re.sub(r"[‘’´`]", "'", x)
+    x = re.sub(r"[“”]", "\"", x)
+    x = re.sub(r"[‐‑‒–—−]", "-", x)
     while True:
         old_x = x
         # Remove citations
-        x = re.sub(ur"((?<!^)\[[^\]]*\]|\[\d+\]|[•♦†‡*#+])*$", "", x.strip())
+        x = re.sub(r"((?<!^)\[[^\]]*\]|\[\d+\]|[•♦†‡*#+])*$", "", x.strip())
         # Remove details in parenthesis
-        x = re.sub(ur"(?<!^)( \([^)]*\))*$", "", x.strip())
+        x = re.sub(r"(?<!^)( \([^)]*\))*$", "", x.strip())
         # Remove outermost quotation mark
-        x = re.sub(ur'^"([^"]*)"$', r'\1', x.strip())
+        x = re.sub(r'^"([^"]*)"$', r'\1', x.strip())
         if x == old_x:
             break
     # Remove final '.'
     if x and x[-1] == '.':
         x = x[:-1]
     # Collapse whitespaces and convert to lower case
-    x = re.sub(ur'\s+', ' ', x, flags=re.U).lower().strip()
+    x = re.sub(r'\s+', ' ', x, flags=re.U).lower().strip()
     return x
 
 
@@ -109,7 +109,7 @@ class Value(object):
 class StringValue(Value):
 
     def __init__(self, content):
-        assert isinstance(content, basestring)
+        assert isinstance(content, str)
         self._normalized = normalize(content)
         self._hash = hash(self._normalized)
 
@@ -131,13 +131,13 @@ class StringValue(Value):
 class NumberValue(Value):
 
     def __init__(self, amount, original_string=None):
-        assert isinstance(amount, (int, long, float))
+        assert isinstance(amount, (int, float))
         if abs(amount - round(amount)) < 1e-6:
             self._amount = int(amount)
         else:
             self._amount = float(amount)
         if not original_string:
-            self._normalized = unicode(self._amount)
+            self._normalized = str(self._amount)
         else:
             self._normalized = normalize(original_string)
         self._hash = hash(self._amount)
@@ -357,7 +357,7 @@ def main():
     target_values_map = {}
     for filename in os.listdir(args.tagged_dataset_path):
         filename = os.path.join(args.tagged_dataset_path, filename)
-        print >> sys.stderr, 'Reading dataset from', filename
+        # print >> sys.stderr, 'Reading dataset from', filename
         with open(filename, 'r', 'utf8') as fin:
             header = fin.readline().rstrip('\n').split('\t')
             for line in fin:
@@ -367,29 +367,30 @@ def main():
                 canon_strings = tsv_unescape_list(stuff['targetCanon'])
                 target_values_map[ex_id] = to_value_list(
                         original_strings, canon_strings)
-    print >> sys.stderr, 'Read', len(target_values_map), 'examples'
+    # print >> sys.stderr, 'Read', len(target_values_map), 'examples'
 
-    print >> sys.stderr, 'Reading predictions from', args.prediction_path
+    # print >> sys.stderr, 'Reading predictions from', args.prediction_path
     num_examples, num_correct = 0, 0
     with open(args.prediction_path, 'r', 'utf8') as fin:
         for line in fin:
             line = line.rstrip('\n').split('\t')
             ex_id = line[0]
             if ex_id not in target_values_map:
-                print 'WARNING: Example ID "%s" not found' % ex_id
+                print('WARNING: Example ID "%s" not found' % ex_id)
             else:
                 target_values = target_values_map[ex_id]
                 predicted_values = to_value_list(line[1:])
                 correct = check_denotation(target_values, predicted_values)
-                print u'%s\t%s\t%s\t%s' % (ex_id, correct,
-                        target_values, predicted_values)
+                print(u'%s\t%s\t%s\t%s' % (ex_id, correct,
+                        target_values, predicted_values))
                 num_examples += 1
                 if correct:
                     num_correct += 1
-    print >> sys.stderr, 'Examples:', num_examples
-    print >> sys.stderr, 'Correct:', num_correct
-    print >> sys.stderr, 'Accuracy:', round(
+    print(sys.stderr, 'Examples:', num_examples)
+    print(sys.stderr, 'Correct:', num_correct)
+    print(sys.stderr, 'Accuracy:', round(
             (num_correct + 1e-9) / (num_examples + 1e-9), 4)
+    )
 
 if __name__ == '__main__':
     main()

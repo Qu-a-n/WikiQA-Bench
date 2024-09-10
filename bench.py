@@ -37,14 +37,39 @@ async def main(start, end):
             qs.append(stuff["utterance"])
             ts_path.append(stuff["context"])
             idx.append(stuff["id"])
-    callings = [
-        stage(
-            question=qs[id], 
-            table=pd.read_csv(ts_path[id]).to_string(index=False),
-            id=idx[id]
-        ) 
-    for id in range(len(qs))
-    ]
+    print(idx)
+
+    # responses = []
+    # length = (int(len(qs)/5)+1 if len(qs)%5!=0 else int(len(qs)/5))
+    # for i in range(length):
+    #     if(5*i+5>len(qs)):
+    #         callings = [
+    #             stage(
+    #                 question=qs[id], 
+    #                 table=pd.read_csv(ts_path[id]).to_string(index=False),
+    #                 id=idx[id]
+    #             ) 
+    #         for id in range(5*i, len(qs))
+    #         ]
+    #     else:
+    #         callings = [
+    #             stage(
+    #                 question=qs[id], 
+    #                 table=pd.read_csv(ts_path[id]).to_string(index=False),
+    #                 id=idx[id]
+    #             ) 
+    #         for id in range(5*i, 5*i+5)
+    #         ]
+    #     response = await asyncio.gather(*callings)
+    #     responses += response
+
+    callings = [stage(
+                    question=qs[id], 
+                    table= pd.read_csv(ts_path[id], on_bad_lines='skip').to_string(index=False),
+                    id=idx[id]
+                ) 
+            for id in range(len(qs))
+            ]
     responses = await asyncio.gather(*callings)
     await close_session()
     await asyncio.sleep(0.25)
@@ -54,7 +79,7 @@ async def main(start, end):
     return
 
 if __name__ == "__main__":
-    asyncio.run(main(0,50))
+    asyncio.run(main(0,2))
 
 
     
